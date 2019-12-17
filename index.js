@@ -2,12 +2,16 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const Sse = require('json-sse')
+
 const Gameroom = require(
   './gameroom/model'
 )
-
+const User = require('./user/model')
 const gameroomFactory = require(
   './gameroom/router'
+)
+const userFactory = require(
+  './user/router'
 )
 
 const app = express()
@@ -30,6 +34,9 @@ const gameroomRouter = gameroomFactory(
 )
 app.use(gameroomRouter)
 
+const userRouter = userFactory(stream)
+app.use(userRouter)
+
 app.get('/', (request, response) => {
   stream.send('test')
 
@@ -41,7 +48,9 @@ app.get(
   async (request, response, next) => {
     try {
       const gamerooms = await Gameroom
-        .findAll()
+        .findAll({
+          include: [User]
+        })
 
       const action = {
         type: 'ALL_GAMEROOMS',
